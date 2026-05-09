@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haitiamoli 2026 – Prenotazioni</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: linear-gradient(160deg, #e8eaf6 0%, #fffde7 100%);
+      min-height: 100vh;
+      padding-bottom: 50px;
+    }
+
+    /* LOGIN */
+    #login-screen {
+      min-height: 100vh;
+      background: #1a237e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .login-logo { text-align: center; margin-bottom: 36px; }
+    .login-logo .polisportiva { font-size: 11px; letter-spacing: 4px; color: #f9a825; font-weight: 700; margin-bottom: 4px; }
+    .login-logo .titolo { font-size: 42px; font-weight: 900; letter-spacing: 3px; color: #fff; line-height: 1; }
+    .login-logo .anno { font-size: 22px; font-weight: 700; color: #f9a825; margin-top: 2px; }
+    .login-logo .sub { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 6px; font-style: italic; }
+    .login-card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 28px 24px;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    .login-card h2 { font-weight: 800; color: #1a237e; font-size: 15px; margin-bottom: 16px; text-align: center; }
+    .login-card input {
+      width: 100%; padding: 11px 14px; border-radius: 10px;
+      border: 2px solid #c5cae9; font-size: 15px; outline: none;
+      color: #1a237e; text-align: center; letter-spacing: 2px;
+      transition: border 0.2s;
+    }
+    .login-card input.errore { border-color: #c62828; }
+    .login-card .err-msg { color: #c62828; font-size: 12px; text-align: center; margin-top: 8px; font-weight: 700; display: none; }
+    .login-card .err-msg.show { display: block; }
+    .login-card button {
+      width: 100%; margin-top: 14px; padding: 12px;
+      border-radius: 10px; border: none;
+      background: #f9a825; color: #1a237e;
+      font-size: 15px; font-weight: 900; cursor: pointer;
+    }
+    .login-footer { margin-top: 20px; font-size: 11px; color: rgba(255,255,255,0.3); }
+
+    /* APP */
+    #app-screen { display: none; }
+    .header {
+      background: #1a237e; text-align: center; padding: 16px 16px 12px;
+    }
+    .header .polisportiva { font-size: 10px; letter-spacing: 3px; color: #f9a825; font-weight: 700; }
+    .header .titolo { font-size: 28px; font-weight: 900; letter-spacing: 2px; color: #fff; }
+    .header .anno { font-size: 17px; font-weight: 700; color: #f9a825; }
+    .header .sub { font-size: 12px; color: rgba(255,255,255,0.75); font-style: italic; margin-top: 2px; }
+    .header .sub strong { color: #f9a825; }
+    .tabs { display: flex; justify-content: center; gap: 8px; margin-top: 10px; }
+    .tabs button {
+      background: rgba(255,255,255,0.15); color: #fff;
+      border: none; border-radius: 20px; padding: 5px 14px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .tabs button.active { background: #f9a825; color: #1a237e; }
+
+    .container { max-width: 520px; margin: 0 auto; padding: 14px 13px 0; }
+
+    .flash {
+      border-radius: 10px; padding: 10px 16px; margin-bottom: 12px;
+      font-weight: 700; text-align: center; font-size: 13px; color: #fff;
+      display: none;
+    }
+    .flash.show { display: block; }
+
+    .card {
+      background: #fff; border-radius: 12px; padding: 14px;
+      margin-bottom: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .card-title { font-weight: 700; color: #1a237e; margin-bottom: 8px; font-size: 13px; }
+
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: 9px 11px; border-radius: 8px;
+      border: 1.5px solid #c5cae9; font-size: 13px;
+      outline: none; color: #1a237e;
+    }
+    input[type="text"] + input[type="text"] { margin-top: 7px; }
+    .mt7 { margin-top: 7px; }
+
+    .section-header {
+      background: #1a237e; color: #fff; border-radius: 10px;
+      padding: 8px 14px; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; font-weight: 800;
+    }
+    .section-header .sub-tot { margin-left: auto; color: #f9a825; }
+
+    .item-row {
+      display: flex; align-items: center; padding: 6px 4px;
+      border-bottom: 1px solid #e8eaf6; gap: 6px;
+    }
+    .item-info { flex: 1; }
+    .item-nome { font-size: 12px; font-weight: 600; color: #1a237e; line-height: 1.2; }
+    .item-prezzo { font-size: 11px; color: #aaa; }
+    .item-subtot { min-width: 54px; text-align: right; font-size: 12px; font-weight: 700; color: #f9a825; }
+    .item-subtot.zero { color: transparent; }
+
+    .counter { display: flex; align-items: center; gap: 7px; }
+    .counter button {
+      border: none; border-radius: 6px; width: 28px; height: 28px;
+      font-size: 17px; cursor: pointer; font-weight: 900; line-height: 1;
+    }
+    .counter .btn-minus { background: #1a237e; color: #fff; }
+    .counter .btn-plus { background: #f9a825; color: #1a237e; }
+    .counter span { min-width: 20px; text-align: center; font-weight: 700; font-size: 15px; }
+
+    .totale-bar {
+      background: #1a237e; border-radius: 12px; padding: 12px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .totale-bar .label { color: #f9a825; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+    .totale-bar .amount { color: #fff; font-size: 22px; font-weight: 900; }
+    .totale-bar .detail { text-align: right; font-size: 11px; color: rgba(255,255,255,0.6); }
+
+    .btn-row { display: flex; gap: 8px; }
+    .btn-azzera {
+      flex: 1; padding: 11px; border-radius: 10px;
+      border: 2px solid #1a237e; background: #fff;
+      color: #1a237e; font-size: 13px; font-weight: 700; cursor: pointer;
+    }
+    .btn-aggiungi {
+      flex: 2; padding: 11px; border-radius: 10px;
+      border: none; background: #f9a825;
+      color: #1a237e; font-size: 13px; font-weight: 900; cursor: pointer;
+    }
+    .btn-aggiungi:disabled { background: #ddd; cursor: not-allowed; }
+
+    /* RIEPILOGO */
+    .ordine-card {
+      background: #fff; border-radius: 12px; padding: 12px;
+      margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    .ordine-header { display: flex; justify-content: space-between; margin-bottom: 5px; align-items: center; }
+    .ordine-nome { font-weight: 700; color: #1a237e; font-size: 13px; }
+    .ordine-ts { font-size: 10px; color: #bbb; }
+    .ordine-totale { font-weight: 900; color: #f9a825; font-size: 16px; }
+    .btn-rimuovi {
+      background: #ffebee; color: #c62828; border: none;
+      border-radius: 6px; padding: 2px 7px; cursor: pointer;
+      font-size: 11px; font-weight: 700; margin-left: 8px;
+    }
+    .ordine-riga { font-size: 12px; color: #444; display: flex; justify-content: space-between; }
+    .ordine-riga span:last-child { color: #1a237e; font-weight: 600; }
+    .ordine-note { margin-top: 4px; font-size: 11px; color: #f57c00; font-style: italic; }
+
+    .grand-total {
+      background: #1a237e; border-radius: 12px; padding: 11px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 14px;
+    }
+    .grand-total span:first-child { color: #fff; font-weight: 700; font-size: 13px; }
+    .grand-total span:last-child { color: #f9a825; font-weight: 900; font-size: 18px; }
+
+    .btn-estrai {
+      width: 100%; padding: 15px 0; border-radius: 12px; border: none;
+      background: #2e7d32; color: #fff; font-size: 15px; font-weight: 900;
+      cursor: pointer; letter-spacing: 0.5px;
+      box-shadow: 0 4px 14px rgba(46,125,50,0.4);
+    }
+    .btn-estrai:disabled { background: #aaa; cursor: wait; }
+    .estrai-note { text-align: center; font-size: 11px; color: #999; margin-top: 6px; }
+
+    .empty { text-align: center; padding: 40px; color: #bbb; font-size: 14px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-logo">
+    <div class="polisportiva">POLISPORTIVA ASSISI</div>
+    <div class="titolo">HAITIAMOLI</div>
+    <div class="anno">2026</div>
+    <div class="sub">Prenotazione Cibo &amp; Bevande</div>
+  </div>
+  <div class="login-card">
+    <h2>🔒 Inserisci la password</h2>
+    <input type="password" id="pwd-input" placeholder="Password" />
+    <div class="err-msg" id="err-msg">❌ Password errata</div>
+    <button onclick="doLogin()">ACCEDI</button>
+  </div>
+  <div class="login-footer">Solo per uso interno squadra</div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <div class="header">
+    <div class="polisportiva">POLISPORTIVA ASSISI</div>
+    <div class="titolo">HAITIAMOLI</div>
+    <div class="anno">2026</div>
+    <div class="sub">Prenotazione — <strong>UNDER 11</strong></div>
+    <div class="tabs">
+      <button class="active" onclick="setView('form', this)">📋 Ordina</button>
+      <button onclick="setView('riepilogo', this)" id="tab-riepilogo">📊 Riepilogo (<span id="count">0</span>)</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="flash" id="flash"></div>
+
+    <!-- FORM -->
+    <div class="view active" id="view-form">
+      <div class="card">
+        <div class="card-title">👤 Chi ordina</div>
+        <input type="text" id="input-nome" placeholder="Nome e Cognome *" />
+        <input type="text" id="input-note" placeholder="Note (allergie, preferenze…)" class="mt7" />
+      </div>
+
+      <div class="card">
+        <div class="section-header">
+          <span>🍔</span> Menù Cucina
+          <span class="sub-tot" id="sub-cucina"></span>
+        </div>
+        <div id="lista-cucina"></div>
+
+        <div class="section-header" style="margin-top:18px">
+          <span>🥤</span> Menù Bar
+          <span class="sub-tot" id="sub-bar"></span>
+        </div>
+        <div id="lista-bar"></div>
+      </div>
+
+      <div class="totale-bar">
+        <div>
+          <div class="label">TOTALE</div>
+          <div class="amount" id="totale-display">0,00 €</div>
+        </div>
+        <div class="detail" id="totale-detail"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-azzera" onclick="azzera()">🗑 Azzera</button>
+        <button class="btn-aggiungi" id="btn-aggiungi" onclick="aggiungi()" disabled>✅ AGGIUNGI ORDINE</button>
+      </div>
+    </div>
+
+    <!-- RIEPILOGO -->
+    <div class="view" id="view-riepilogo">
+      <div id="lista-ordini"></div>
+      <div id="riepilogo-footer" style="display:none">
+        <div class="grand-total">
+          <span id="grand-label">Totale 0 ordini</span>
+          <span id="grand-amount">0,00 €</span>
+        </div>
+        <button class="btn-estrai" id="btn-estrai" onclick="estraiExcel()">📥 ESTRAI EXCEL</button>
+        <div class="estrai-note">Genera il file nel formato ufficiale Haitiamoli 2026</div>
+      </div>
+      <div class="empty" id="empty-msg">Nessun ordine ancora</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const PASSWORD = "under11";
+
+const CUCINA = [
+  { id:"sal",    nome:"PANINO CON SALAMELLA",                       prezzo:4.5 },
+  { id:"salveg", nome:"PANINO CON SALAMELLA E VERDURE GRIGLIATE",   prezzo:5.0 },
+  { id:"wur",    nome:"PANINO CON WURSTEL",                         prezzo:3.0 },
+  { id:"wurcr",  nome:"PANINO CON WURSTEL E CRAUTI",                prezzo:3.0 },
+  { id:"wurveg", nome:"PANINO CON WURSTEL E VERDURE GRIGLIATE",     prezzo:3.5 },
+  { id:"salme",  nome:"PANINO CON SALAME",                          prezzo:3.5 },
+  { id:"cotto",  nome:"PANINO CON PROSCIUTTO COTTO",                prezzo:3.5 },
+  { id:"crudo",  nome:"PANINO CON PROSCIUTTO CRUDO",                prezzo:3.5 },
+  { id:"veg",    nome:"PANINO CON VERDURE GRIGLIATE",               prezzo:3.0 },
+  { id:"toast",  nome:"TOAST",                                      prezzo:2.5 },
+  { id:"pat",    nome:"PATATINE",                                   prezzo:2.5 },
+];
+
+const BAR = [
+  { id:"acqn",    nome:"ACQUA NATURALE",  prezzo:0.5 },
+  { id:"acqf",    nome:"ACQUA FRIZZANTE", prezzo:0.5 },
+  { id:"coca",    nome:"COCA COLA",       prezzo:1.5 },
+  { id:"cocaz",   nome:"COCA COLA ZERO",  prezzo:1.5 },
+  { id:"fanta",   nome:"FANTA",           prezzo:1.5 },
+  { id:"sprite",  nome:"SPRITE",          prezzo:1.5 },
+  { id:"chin",    nome:"CHINOTTO",        prezzo:1.5 },
+  { id:"tepesca", nome:"TE' ALLA PESCA",  prezzo:1.5 },
+  { id:"telim",   nome:"TE' AL LIMONE",   prezzo:1.5 },
+  { id:"birra",   nome:"BIRRA",           prezzo:2.5 },
+];
+
+const qty = {};
+let ordini = [];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const fmt = n => n.toFixed(2).replace(".",",") + " €";
+
+function doLogin() {
+  const v = document.getElementById("pwd-input").value.trim().toLowerCase();
+  if (v === PASSWORD) {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app-screen").style.display = "block";
+    renderListe();
+  } else {
+    document.getElementById("pwd-input").classList.add("errore");
+    document.getElementById("err-msg").classList.add("show");
+    document.getElementById("pwd-input").value = "";
+    setTimeout(() => {
+      document.getElementById("pwd-input").classList.remove("errore");
+      document.getElementById("err-msg").classList.remove("show");
+    }, 2000);
+  }
+}
+document.getElementById("pwd-input").addEventListener("keydown", e => { if(e.key==="Enter") doLogin(); });
+
+function setView(name, btn) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-"+name).classList.add("active");
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  if (name === "riepilogo") renderRiepilogo();
+}
+
+function showFlash(msg, color) {
+  const el = document.getElementById("flash");
+  el.textContent = msg;
+  el.style.background = color;
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+// ── Render liste ──────────────────────────────────────────────────────────────
+function renderListe() {
+  renderSezione("lista-cucina", CUCINA);
+  renderSezione("lista-bar", BAR);
+}
+
+function renderSezione(containerId, items) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+  items.forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item-row";
+    div.id = "row-"+item.id;
+    div.innerHTML = `
+      <div class="item-info">
+        <div class="item-nome">${item.nome}</div>
+        <div class="item-prezzo">${fmt(item.prezzo)}</div>
+      </div>
+      <div class="counter">
+        <button class="btn-minus" onclick="cambiaQty('${item.id}',-1)">−</button>
+        <span id="qty-${item.id}">0</span>
+        <button class="btn-plus" onclick="cambiaQty('${item.id}',1)">+</button>
+      </div>
+      <div class="item-subtot zero" id="sub-${item.id}">${fmt(0)}</div>
+    `;
+    el.appendChild(div);
+  });
+}
+
+function cambiaQty(id, delta) {
+  const item = [...CUCINA,...BAR].find(i => i.id===id);
+  qty[id] = Math.max(0, (qty[id]||0) + delta);
+  document.getElementById("qty-"+id).textContent = qty[id];
+  const subEl = document.getElementById("sub-"+id);
+  const sub = qty[id] * item.prezzo;
+  subEl.textContent = fmt(sub);
+  subEl.className = "item-subtot" + (qty[id]===0?" zero":"");
+  aggiornaFooter();
+}
+
+function aggiornaFooter() {
+  const totCucina = CUCINA.reduce((s,i)=>s+(qty[i.id]||0)*i.prezzo,0);
+  const totBar = BAR.reduce((s,i)=>s+(qty[i.id]||0)*i.prezzo,0);
+  const tot = totCucina+totBar;
+
+  document.getElementById("totale-display").textContent = fmt(tot);
+
+  const detail = [];
+  if (totCucina>0) detail.push("Cucina: "+fmt(totCucina));
+  if (totBar>0) detail.push("Bar: "+fmt(totBar));
+  document.getElementById("totale-detail").innerHTML = detail.join("<br>");
+
+  document.getElementById("sub-cucina").textContent = totCucina>0?fmt(totCucina):"";
+  document.getElementById("sub-bar").textContent = totBar>0?fmt(totBar):"";
+
+  const nome = document.getElementById("input-nome").value.trim();
+  document.getElementById("btn-aggiungi").disabled = !(nome && tot>0);
+}
+
+document.getElementById("input-nome").addEventListener("input", aggiornaFooter);
+
+function azzera() {
+  [...CUCINA,...BAR].forEach(i => {
+    qty[i.id]=0;
+    document.getElementById("qty-"+i.id).textContent="0";
+    document.getElementById("sub-"+i.id).textContent=fmt(0);
+    document.getElementById("sub-"+i.id).className="item-subtot zero";
+  });
+  aggiornaFooter();
+}
+
+function aggiungi() {
+  const nome = document.getElementById("input-nome").value.trim();
+  const note = document.getElementById("input-note").value.trim();
+  const totCucina = CUCINA.reduce((s,i)=>s+(qty[i.id]||0)*i.prezzo,0);
+  const totBar = BAR.reduce((s,i)=>s+(qty[i.id]||0)*i.prezzo,0);
+  const tot = totCucina+totBar;
+  if (!nome||tot===0) return;
+
+  ordini.push({
+    nome,
+    note,
+    cucina: CUCINA.filter(i=>qty[i.id]>0).map(i=>({id:i.id,nome:i.nome,qty:qty[i.id],prezzo:i.prezzo})),
+    bar: BAR.filter(i=>qty[i.id]>0).map(i=>({id:i.id,nome:i.nome,qty:qty[i.id],prezzo:i.prezzo})),
+    totale: tot,
+    ts: new Date().toLocaleTimeString("it-IT"),
+  });
+
+  document.getElementById("input-nome").value="";
+  document.getElementById("input-note").value="";
+  azzera();
+  document.getElementById("count").textContent = ordini.length;
+  showFlash("✅ Ordine aggiunto!", "#43a047");
+}
+
+// ── Riepilogo ─────────────────────────────────────────────────────────────────
+function renderRiepilogo() {
+  const container = document.getElementById("lista-ordini");
+  const footer = document.getElementById("riepilogo-footer");
+  const empty = document.getElementById("empty-msg");
+
+  container.innerHTML="";
+  if (ordini.length===0) {
+    footer.style.display="none";
+    empty.style.display="block";
+    return;
+  }
+  empty.style.display="none";
+  footer.style.display="block";
+
+  ordini.forEach((o,i) => {
+    const div = document.createElement("div");
+    div.className="ordine-card";
+    const righe = [...o.cucina,...o.bar].map(r=>
+      `<div class="ordine-riga"><span>${r.qty}× ${r.nome}</span><span>${fmt(r.qty*r.prezzo)}</span></div>`
+    ).join("");
+    div.innerHTML=`
+      <div class="ordine-header">
+        <div>
+          <div class="ordine-nome">${o.nome}</div>
+          <div class="ordine-ts">ore ${o.ts}</div>
+        </div>
+        <div style="display:flex;align-items:center">
+          <span class="ordine-totale">${fmt(o.totale)}</span>
+          <button class="btn-rimuovi" onclick="rimuovi(${i})">✕</button>
+        </div>
+      </div>
+      ${righe}
+      ${o.note?`<div class="ordine-note">📝 ${o.note}</div>`:""}
+    `;
+    container.appendChild(div);
+  });
+
+  const grand = ordini.reduce((s,o)=>s+o.totale,0);
+  document.getElementById("grand-label").textContent=`Totale ${ordini.length} ordini`;
+  document.getElementById("grand-amount").textContent=fmt(grand);
+}
+
+function rimuovi(i) {
+  ordini.splice(i,1);
+  document.getElementById("count").textContent=ordini.length;
+  renderRiepilogo();
+}
+
+// ── Excel ─────────────────────────────────────────────────────────────────────
+function thin() {
+  const s={style:"thin",color:{argb:"FF000000"}};
+  return {top:s,bottom:s,left:s,right:s};
+}
+
+function buildSheet(ws, items, titolo, qtys, oggi) {
+  ws.getColumn(1).width=57.71;
+  ws.getColumn(2).width=10;
+  ws.getColumn(3).width=9.14;
+  ws.getColumn(4).width=29.71;
+  let r=1;
+
+  ws.mergeCells(r,1,r,4);
+  const c1=ws.getCell(r,1);
+  c1.value=titolo; c1.font={name:"Calibri",bold:true,size:26};
+  c1.alignment={horizontal:"center",vertical:"center",wrapText:true};
+  c1.border=thin(); ws.getRow(r).height=67.5; r++;
+
+  ws.mergeCells(r,1,r,4); ws.getRow(r).height=9; r++;
+
+  const cDL=ws.getCell(r,1);
+  cDL.value="DATA"; cDL.font={name:"Calibri",bold:true,size:16};
+  cDL.alignment={horizontal:"right",vertical:"center"}; cDL.border=thin();
+  ws.mergeCells(r,2,r,4);
+  const cDV=ws.getCell(r,2);
+  cDV.value=oggi; cDV.font={name:"Calibri",size:11};
+  cDV.alignment={horizontal:"center",vertical:"center"}; cDV.border=thin();
+  ws.getRow(r).height=27; r++;
+
+  const cSL=ws.getCell(r,1);
+  cSL.value="SOCIETA' SPORTIVA"; cSL.font={name:"Calibri",bold:true,size:16};
+  cSL.alignment={horizontal:"right",vertical:"center"}; cSL.border=thin();
+  ws.mergeCells(r,2,r,4);
+  const cSV=ws.getCell(r,2);
+  cSV.value="UNDER 11"; cSV.font={name:"Calibri",bold:true,size:11};
+  cSV.alignment={horizontal:"center",vertical:"center"}; cSV.border=thin();
+  ws.getRow(r).height=27; r++;
+
+  const cO1=ws.getCell(r,1);
+  cO1.value="Orario inizio partita: _______________";
+  cO1.font={name:"Calibri",bold:true,size:16};
+  cO1.alignment={horizontal:"left",vertical:"center"}; cO1.border=thin();
+  const cO2=ws.getCell(r,2);
+  cO2.value="Orario arrivo a cena: ______________";
+  cO2.font={name:"Calibri",bold:true,size:16};
+  cO2.alignment={horizontal:"left",vertical:"center"}; cO2.border=thin();
+  ws.getCell(r,3).border=thin(); ws.getCell(r,4).border=thin();
+  ws.getRow(r).height=27; r++;
+
+  ws.getCell(r,1).border=thin();
+  [["N.",2],["€",3],["TOTALE € ",4]].forEach(([h,col])=>{
+    const c=ws.getCell(r,col);
+    c.value=h; c.font={name:"Calibri",bold:true,size:12};
+    c.alignment={horizontal:"center",vertical:"center"}; c.border=thin();
+  });
+  ws.getRow(r).height=15.75; r++;
+
+  items.forEach(item=>{
+    const q=qtys[item.id]||null;
+    const cA=ws.getCell(r,1);
+    cA.value=item.nome; cA.font={name:"Calibri",bold:true,size:14};
+    cA.alignment={vertical:"center"}; cA.border=thin();
+    const cB=ws.getCell(r,2);
+    cB.value=q; cB.font={name:"Calibri",size:11};
+    cB.alignment={vertical:"center"}; cB.border=thin();
+    const cC=ws.getCell(r,3);
+    cC.value=item.prezzo; cC.font={name:"Calibri",bold:true,size:14};
+    cC.alignment={horizontal:"center",vertical:"center"}; cC.border=thin();
+    const cD=ws.getCell(r,4);
+    cD.value=q?q*item.prezzo:null; cD.font={name:"Calibri",size:11};
+    cD.alignment={vertical:"center"}; cD.border=thin();
+    ws.getRow(r).height=21; r++;
+  });
+
+  ws.mergeCells(r,1,r,3);
+  const cTL=ws.getCell(r,1);
+  cTL.value="TOTALE SQUADRA"; cTL.font={name:"Calibri",bold:true,size:16};
+  cTL.alignment={horizontal:"right",vertical:"center"};
+  cTL.border={top:thin().top,bottom:thin().bottom,left:thin().left};
+  const tot=items.reduce((s,i)=>s+(qtys[i.id]||0)*i.prezzo,0);
+  const cTV=ws.getCell(r,4);
+  cTV.value=tot>0?tot:null; cTV.font={name:"Calibri",size:11};
+  cTV.alignment={vertical:"center"}; cTV.border=thin();
+  ws.getRow(r).height=30; r++;
+
+  ws.mergeCells(r,1,r,4); ws.getRow(r).height=9;
+}
+
+async function estraiExcel() {
+  if (!ordini.length) { showFlash("⚠️ Nessun ordine","#e65100"); return; }
+  const btn=document.getElementById("btn-estrai");
+  btn.disabled=true; btn.textContent="⏳ Generazione…";
+
+  const qtyCucina={}, qtyBar={};
+  ordini.forEach(o=>{
+    o.cucina.forEach(({id,qty})=>{ qtyCucina[id]=(qtyCucina[id]||0)+qty; });
+    o.bar.forEach(({id,qty})=>{ qtyBar[id]=(qtyBar[id]||0)+qty; });
+  });
+
+  const oggi=new Date().toLocaleDateString("it-IT");
+  const wb=new ExcelJS.Workbook();
+  buildSheet(wb.addWorksheet("Prenotazioni CENA squadre"),CUCINA,"TORNEI HAITIAMOLI 2026\nPRENOTAZIONE CENA SQUADRA",qtyCucina,oggi);
+  buildSheet(wb.addWorksheet("Prenotazioni BAR squadre"),BAR,"TORNEI HAITIAMOLI 2026\nPRENOTAZIONE BAR SQUADRA",qtyBar,oggi);
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download=`Haitiamoli_2026_${oggi.replace(/\//g,"-")}.xlsx`;
+  a.click(); URL.revokeObjectURL(url);
+
+  btn.disabled=false; btn.textContent="📥 ESTRAI EXCEL";
+  showFlash("📥 Excel scaricato!","#1565c0");
+}
+</script>
+</body>
+</html>
