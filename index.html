@@ -577,14 +577,23 @@ function buildSheet(ws, items, titolo, qtys, oggi) {
 }
 
 async function estraiExcel() {
-  if (!ordiniDB.length) { showFlash("⚠️ Nessun ordine","#e65100"); return; }
   const btn=document.getElementById("btn-estrai");
-  btn.disabled=true; btn.textContent="⏳ Generazione…";
+  btn.disabled=true; btn.textContent="⏳ Aggiornamento…";
 
+  // Ricarica sempre i dati freschi da Supabase prima di generare
+  const { data, error } = await db.from("ordini").select("*").order("created_at", {ascending:true});
+  if (error || !data || data.length===0) {
+    showFlash("⚠️ Nessun ordine da estrarre","#e65100");
+    btn.disabled=false; btn.textContent="📥 ESTRAI EXCEL";
+    return;
+  }
+  ordiniDB = data;
+
+  btn.textContent="⏳ Generazione…";
   const qtyCucina={}, qtyBar={};
   ordiniDB.forEach(o=>{
-    (o.cucina||[]).forEach(({id,qty})=>{ qtyCucina[id]=(qtyCucina[id]||0)+qty; });
-    (o.bar||[]).forEach(({id,qty})=>{ qtyBar[id]=(qtyBar[id]||0)+qty; });
+    (o.cucina||[]).forEach(item=>{ qtyCucina[item.id]=(qtyCucina[item.id]||0)+item.qty; });
+    (o.bar||[]).forEach(item=>{ qtyBar[item.id]=(qtyBar[item.id]||0)+item.qty; });
   });
 
   const oggi=new Date().toLocaleDateString("it-IT");
